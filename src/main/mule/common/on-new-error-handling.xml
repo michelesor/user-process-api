@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:module-logger-extension="http://www.mulesoft.org/schema/mule/module-logger-extension"
+	xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
+http://www.mulesoft.org/schema/mule/module-logger-extension http://www.mulesoft.org/schema/mule/module-logger-extension/current/mule-module-logger-extension.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<error-handler name="on-new-error-handling" doc:id="ca45d7c7-7e9a-42c4-acd6-87fb8e0795bb" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="2febbdf7-b698-4ae2-91b3-68f90aae666f" >
+			<logger level="ERROR" doc:name="Logger" doc:id="8907cc1e-11de-42be-8841-2679d9517cd7" message='#[output application/java&#10;---&#10;"retry esausted , moved file: " ++ vars.fileName ++ "to Error Folder " ++ "correlationId : "  ++ correlationId]' />
+			<file:move doc:name="Move to ERROR" doc:id="f87c5221-c355-4769-ab0b-ad6ba50b2593" sourcePath="#[vars.sourcePath]" targetPath="#[vars.errPath]" />
+		</on-error-propagate>
+	</error-handler>
+</mule>

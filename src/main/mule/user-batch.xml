@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="create-users-implementation-flow" doc:id="15b130a8-2637-4a09-ab85-eaefb2650650">
+		<file:listener doc:name="On New or Updated File" doc:id="90fd2a98-0cad-4cea-91af-17a8831944dc" directory="${create-users.directory}" recursive="false" outputMimeType='application/csv; separator=";"; header=true'>
+			<scheduling-strategy >
+				<fixed-frequency/>
+			</scheduling-strategy>
+			<file:matcher filenamePattern="${create-users.filePattern}" />
+		</file:listener>
+		<until-successful maxRetries="${flow.maxRetry}" doc:name="Until Successful" doc:id="8d4cbd63-00ae-4311-be87-602490ce8adb" millisBetweenRetries="${flow.time}">
+			<ee:transform doc:name="setVars" doc:id="8b3d508d-9b3a-4c98-89cc-9653e458f086">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="fileName"><![CDATA[attributes.fileName]]></ee:set-variable>
+				<ee:set-variable variableName="sourcePath"><![CDATA[attributes.path]]></ee:set-variable>
+					<ee:set-variable variableName="errPath" ><![CDATA[p('create-users.error')]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<logger level="INFO" doc:name="Logger start" doc:id="ecd0aa77-0eeb-46b8-a48b-e7f174710221" message='#[output application/java&#10;---&#10;"start create users flow with file name: " ++ attributes.fileName ++ " correlationId: " ++ correlationId]' />
+			<ee:transform doc:name="transform csv in json" doc:id="53881ccc-087f-42c0-8367-efe3437e2164">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map (row) -> {
+    id: row[0],
+    nome: row[1],
+    cognome: row[2],
+    citta: row[3],
+    eta: row[4] as Number,
+    email: row[5]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<http:request method="POST" doc:name="Request POST /users" doc:id="3c2cd0f1-4fe1-4f23-afe0-23ed3c7c3ebd" config-ref="Database_System_HTTP_Request_configuration" path="${database-sys.path}" responseTimeout="999999">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "123abc",
+	"client_id" : "123abc"
+}]]]></http:headers>
+		</http:request>
+			<file:move doc:name="Move to ELAB" doc:id="1c2a4e39-eef6-451a-a265-a540b0ca8fbe" sourcePath="#[vars.sourcePath]" targetPath="#[p('create-users.elab')]" />
+			<logger level="INFO" doc:name="Logger END" doc:id="9ac9ca8f-4e53-4d9f-b1fe-fce72c7a4070" message='#[output application/java&#10;---&#10;"End create user flow , file name: " ++ vars.fileName  ++ " moved to ELAB" ++ "correlaionId: " ++ correlationId]' />
+		</until-successful>
+		<error-handler ref="on-new-error-handling" />
+	</flow>
+	<flow name="update-users-implementation-flow" doc:id="a74801a3-0158-4104-8025-8150f35fc3b4" >
+		<file:listener doc:name="On New or Updated File" doc:id="8a4392ed-1d27-493c-9900-5ac6f4a98506" directory="${update-users.directory}" recursive="false" outputMimeType='application/csv; separator=";"; header=true' >
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="${update-users.filePattern}" />
+		</file:listener>
+		<until-successful maxRetries="${flow.maxRetry}" doc:name="Until Successful" doc:id="66f98b1b-e4f1-46e8-a77b-f856fa10a7e6" millisBetweenRetries="${flow.time}">
+			<ee:transform doc:name="setVars" doc:id="c5dba687-bb32-49bd-b68d-0f97914124c1">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="fileName"><![CDATA[attributes.fileName]]></ee:set-variable>
+				<ee:set-variable variableName="sourcePath"><![CDATA[attributes.path]]></ee:set-variable>
+					<ee:set-variable variableName="errPath" ><![CDATA[p('update-users.error')]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<logger level="INFO" doc:name="Logger start" doc:id="c2fa7620-0215-4d2f-9625-0b5f3218a009" message='#[output application/java&#10;---&#10;"start update users flow with file name: " ++ attributes.fileName ++ " correlationId: " ++ correlationId]' />
+			<ee:transform doc:name="transform csv in json" doc:id="514dd3ad-345b-4c21-85d9-697cd1eb4eaf">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map (row) -> {
+    id: row[0],
+    nome: row[1],
+    cognome: row[2],
+    citta: row[3],
+    eta: row[4] as Number,
+    email: row[5]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<http:request method="PUT" doc:name="Request  PUT /users" doc:id="9153e77f-7564-4566-af56-e2ba8bdebd91" config-ref="Database_System_HTTP_Request_configuration" path="${database-sys.path}" responseTimeout="999999">
+				<http:body ><![CDATA[#[payload[0]]]]></http:body>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "123abc",
+	"client_id" : "123abc"
+}]]]></http:headers>
+			</http:request>
+			<file:move doc:name="Move to ELAB" doc:id="7c14db73-cb27-47d2-8fc4-6eaa99b452b7" sourcePath="#[vars.sourcePath]" targetPath="#[p('update-users.elab')]" />
+			<logger level="INFO" doc:name="Logger END" doc:id="b92525c9-668a-4949-bcd5-277fdbb82299" message='#[output application/java&#10;---&#10;"End create user flow , file name: " ++ vars.fileName  ++ " moved to ELAB" ++ "correlaionId: " ++ correlationId]' />
+		</until-successful>
+		<error-handler ref="on-new-error-handling" />
+	</flow>
+</mule>

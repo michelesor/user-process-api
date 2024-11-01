@@ -1,0 +1,25 @@
+create-users:
+  directory: "C:/Users/msorb/CSV-TEST/create_users/" 
+  filePattern: "create_users.csv"
+  elab: "C:/Users/msorb/CSV-TEST/create_users/ELAB/"
+  error: "C:/Users/msorb/CSV-TEST/create_users/ERROR/"
+  
+  
+database-sys:
+  basePath: "/api/"
+  host: "localhost"
+  port: "8082"
+  path: "/users"
+  protocol : "HTTP"
+  
+
+update-users:
+  directory: "C:/Users/msorb/CSV-TEST/update_users/" 
+  filePattern: "update_users.csv"
+  elab: "C:/Users/msorb/CSV-TEST/update_users/ELAB/"
+  error: "C:/Users/msorb/CSV-TEST/update_users/ERROR/"
+  
+
+flow:
+  maxRetry: "5"
+  time: "6000"
