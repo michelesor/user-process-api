@@ -93,39 +93,12 @@ output application/json
         </error-handler>
     </flow>
     <flow name="delete:\users\(id):user-process-api-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  id: "123456",
-  message: "delete"
-} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+        <flow-ref doc:name="delete-user-by-id-implementation-flow" doc:id="498fee9e-6fc0-4ff3-af23-1e116318f4d0" name="delete-user-by-id-implementation-flow"/>
     </flow>
     <flow name="get:\users:user-process-api-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-[
-  {
-    fileName: "get_users.csv",
-    message: "file created"
-  }
-] as Array {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="get-users-implementation-flow" doc:id="a23b85a1-9b7a-4272-8271-d95b7074450f" name="get-users-implementation-flow"/>
     </flow>
     <flow name="get:\users\(id):user-process-api-config">
-        <flow-ref doc:name="get-user-by-id-implementation-flow" doc:id="7e03c715-f4d9-4788-b519-593bd7d3b94e" name="get-user-by-id-implementation-flow"/>
+        <flow-ref doc:name="get-user-by-id-implementation-flow" doc:id="7e03c715-f4d9-4788-b519-593bd7d3b94e" name="get-user-by-id-implementation-flow" />
     </flow>
 </mule>

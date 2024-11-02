@@ -7,38 +7,22 @@ http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/fil
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
 	<flow name="get-user-by-id-implementation-flow" doc:id="8a1253bd-9e83-4ae0-83db-7e257e3d83ee" >
-		<until-successful maxRetries="${flow.maxRetry}" doc:name="Until Successful" doc:id="a131fc2b-6f53-47f1-9ac1-f023c69bb769" millisBetweenRetries="${flow.time}" >
-			<logger level="INFO" doc:name="Logger start" doc:id="522b161c-bcd6-4922-8bf3-088d70b52ef7" message='#[output application/java&#10;---&#10;"start getuser by id flow with id: " ++ attributes.uriParams.id ++ " correlationId: " ++ correlationId]' />
-			<ee:transform doc:name="transform csv in json" doc:id="f109a54f-a1d1-4cfc-8807-d4efc82601f6" >
-				<ee:message >
-					<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-payload map (row) -> {
-    id: row[0],
-    nome: row[1],
-    cognome: row[2],
-    citta: row[3],
-    eta: row[4] as Number,
-    email: row[5]
-}]]></ee:set-payload>
-				</ee:message>
-			</ee:transform>
-			<http:request method="GET" doc:name="Request  GET /users/{id}" doc:id="1b160c05-03f4-4dc4-b1e1-b761139b57af" config-ref="Database_System_HTTP_Request_configuration" path="${database-sys.path}/{id}" responseTimeout="999999" target="getUserId">
-				<http:headers ><![CDATA[#[output application/java
+		<logger level="INFO" doc:name="Logger start" doc:id="522b161c-bcd6-4922-8bf3-088d70b52ef7" message='#[output application/java&#10;---&#10;"start getuser by id flow with id: " ++ attributes.uriParams.id ++ " correlationId: " ++ correlationId]' />
+		<http:request method="GET" doc:name="Request  GET /users/{id}" doc:id="1b160c05-03f4-4dc4-b1e1-b761139b57af" config-ref="Database_System_HTTP_Request_configuration" path="${database-sys.path}/{id}" responseTimeout="999999" target="getUserId">
+				<http:headers><![CDATA[#[output application/java
 ---
 {
 	"client_secret" : "123abc",
 	"client_id" : "123abc"
 }]]]></http:headers>
-				<http:uri-params ><![CDATA[#[output application/java
+				<http:uri-params><![CDATA[#[output application/java
 ---
 {
 	"id" : attributes.uriParams.id
 }]]]></http:uri-params>
 			</http:request>
-			<file:write doc:name="Write to ELAB" doc:id="a8d4957d-2d0a-4dd6-a674-d6b15979caf6" path="#[p('get-users.elab') ++ &quot;_&quot; ++ vars.getUserId.id]">
-				<file:content ><![CDATA[#[%dw 2.0
+		<file:write doc:name="Write to ELAB" doc:id="a8d4957d-2d0a-4dd6-a674-d6b15979caf6" path="#[p('get-users-id.elab') ++ &quot;get_user_&quot; ++ vars.getUserId.id ++ &quot;.csv&quot;]">
+				<file:content><![CDATA[#[%dw 2.0
 output application/csv  separator=";", header=true
 ---
 {
@@ -50,18 +34,17 @@ output application/csv  separator=";", header=true
   email: vars.getUserId.email
 }]]]></file:content>
 			</file:write>
-			<ee:transform doc:name="response" doc:id="c1eaa209-25e5-4449-9876-230119fa3480" >
-				<ee:message >
-					<ee:set-payload ><![CDATA[%dw 2.0
+		<ee:transform doc:name="response" doc:id="c1eaa209-25e5-4449-9876-230119fa3480">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-	fileName: p('get-users.elab') ++ "_" ++ payload.id,
+	fileName: p('get-users-id.elab') ++ "get_user_" ++ vars.getUserId.id ++ ".csv",
 	message: "file with user created"
 }]]></ee:set-payload>
 				</ee:message>
 			</ee:transform>
-			<logger level="INFO" doc:name="Logger END" doc:id="6299af75-6d31-477b-9856-f0c03b13baf5" message='#[output application/java&#10;---&#10;"End get user by Id flow , file name: " ++ payload.fileName  ++ "correlaionId: " ++ correlationId]' />
-		</until-successful>
+		<logger level="INFO" doc:name="Logger END" doc:id="6299af75-6d31-477b-9856-f0c03b13baf5" message='#[output application/java&#10;---&#10;"End get user by Id flow , file name: " ++ payload.fileName  ++ "correlaionId: " ++ correlationId]' />
 	</flow>
 </mule>

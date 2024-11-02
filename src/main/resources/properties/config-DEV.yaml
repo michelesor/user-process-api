@@ -1,6 +1,6 @@
 create-users:
   directory: "C:/Users/msorb/CSV-TEST/create_users/" 
-  filePattern: "create_users.csv"
+  filePattern: "create_users_*.csv"
   elab: "C:/Users/msorb/CSV-TEST/create_users/ELAB/"
   error: "C:/Users/msorb/CSV-TEST/create_users/ERROR/"
   
@@ -15,15 +15,27 @@ database-sys:
 
 update-users:
   directory: "C:/Users/msorb/CSV-TEST/update_user/" 
-  filePattern: "update_users.csv"
+  filePattern: "update_users_*.csv"
   elab: "C:/Users/msorb/CSV-TEST/update_user/ELAB/"
   error: "C:/Users/msorb/CSV-TEST/update_user/ERROR/"
   
+  
+patch-users:
+  directory: "C:/Users/msorb/CSV-TEST/patch_user/" 
+  filePattern: "patch_users_*.csv"
+  elab: "C:/Users/msorb/CSV-TEST/patch_user/ELAB/"
+  error: "C:/Users/msorb/CSV-TEST/patch_user/ERROR/"  
+  
  
 get-users-id:
-  elab: "C:/Users/msorb/CSV-TEST/get_users/ELAB/"
+  elab: "C:/Users/msorb/CSV-TEST/get_users_id/ELAB/"
  
+get-users:
+  elab: "C:/Users/msorb/CSV-TEST/get_users/ELAB/" 
   
+  
+delete-user:
+  elab: "C:/Users/msorb/CSV-TEST/delete_user/ELAB/"  
 
 flow:
   maxRetry: "5"

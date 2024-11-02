@@ -98,4 +98,50 @@ payload map (row) -> {
 		</until-successful>
 		<error-handler ref="on-new-error-handling" />
 	</flow>
+	<flow name="patch-users-implementation-flow" doc:id="f2bef158-5939-4ddf-b7b9-e3de3284e4c8" >
+		<file:listener doc:name="On New or Updated File" doc:id="b4260945-da2b-4e70-9730-295b5c424cbb" directory="${patch-users.directory}" recursive="false" outputMimeType='application/csv; separator=";"; header=true' >
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="${patch-users.filePattern}" />
+		</file:listener>
+		<until-successful maxRetries="${flow.maxRetry}" doc:name="Until Successful" doc:id="7e26a97e-2ea9-4cc2-8346-d22e14d77adc" millisBetweenRetries="${flow.time}" >
+			<ee:transform doc:name="setVars" doc:id="c8de7587-37d8-4e25-8668-97b6d39563fd" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="fileName" ><![CDATA[attributes.fileName]]></ee:set-variable>
+					<ee:set-variable variableName="sourcePath" ><![CDATA[attributes.path]]></ee:set-variable>
+					<ee:set-variable variableName="errPath" ><![CDATA[p('patch-users.error')]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger start" doc:id="a402f702-b4e8-4221-8a35-f855c80bb4a8" message='#[output application/java&#10;---&#10;"start patch users flow with file name: " ++ attributes.fileName ++ " correlationId: " ++ correlationId]' />
+			<ee:transform doc:name="transform csv in json" doc:id="d3f0fb6b-ce23-40c1-b29e-6922009b19b9" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map (row) -> {
+    id: row[0],
+    nome: row[1],
+    cognome: row[2],
+    citta: row[3],
+    eta: row[4] as Number default null,
+    email: row[5]
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<http:request method="PATCH" doc:name="Request  PATCH /users" doc:id="9cd80c80-1b8b-438c-b7be-694b9310ea15" config-ref="Database_System_HTTP_Request_configuration" path="${database-sys.path}" responseTimeout="999999" >
+				<http:body ><![CDATA[#[payload[0]]]]></http:body>
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "123abc",
+	"client_id" : "123abc"
+}]]]></http:headers>
+			</http:request>
+			<file:move doc:name="Move to ELAB" doc:id="4bb6d877-6970-4e00-a833-8ab904fd01c7" sourcePath="#[vars.sourcePath]" targetPath="#[p('patch-users.elab')]" />
+			<logger level="INFO" doc:name="Logger END" doc:id="104a0f93-2d55-4c2c-a59b-0fe3bb1cfab6" message='#[output application/java&#10;---&#10;"End create user flow , file name: " ++ vars.fileName  ++ " moved to ELAB" ++ "correlaionId: " ++ correlationId]' />
+		</until-successful>
+		<error-handler ref="on-new-error-handling" />
+	</flow>
 </mule>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="delete-user-by-id-implementation-flow" doc:id="33eae10e-1c8b-4faf-8a1b-87ef284de4bb" >
+		<set-variable value="#[attributes.uriParams.id]" doc:name="id" doc:id="799d490c-3940-4e74-b552-75d686d74c53" variableName="id"/>
+		<logger level="INFO" doc:name="Logger start" doc:id="adba6832-a54a-4112-91e3-eb7dfd9f9238" message='#[output application/java&#10;---&#10;"start delete user by id flow with id: " ++ attributes.uriParams.id ++ " correlationId: " ++ correlationId]' />
+		<http:request method="DELETE" doc:name="Request  DELETE /users/{id}" doc:id="113c609c-68bc-4af9-97d0-50426562ee94" config-ref="Database_System_HTTP_Request_configuration" path="${database-sys.path}/{id}" responseTimeout="999999" target="deleteUser" >
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "123abc",
+	"client_id" : "123abc"
+}]]]></http:headers>
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : attributes.uriParams.id
+}]]]></http:uri-params>
+		</http:request>
+		<file:write doc:name="Write to ELAB" doc:id="f3329076-9432-4b06-bb5c-939083f9408e" path="#[p('delete-user.elab') ++ &quot;delete_user_&quot; ++ vars.id ++ &quot;.csv&quot;]" >
+			<file:content ><![CDATA[#[%dw 2.0
+output application/csv  separator=";", header=true
+---
+{
+  id: vars.id
+}]]]></file:content>
+		</file:write>
+		<ee:transform doc:name="response" doc:id="2279af6f-a529-49f0-a008-732ed506d4d5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	fileName: p('delete-user.elab') ++ "get_user_" ++ vars.id ++ ".csv",
+	message: "file with user deleted "
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger END" doc:id="6ab2cdbb-f71d-4354-a031-babd7e4a3e3d" message='#[output application/java&#10;---&#10;"End delete user by Id flow , file name: " ++ payload.fileName  ++ "correlaionId: " ++ correlationId]' />
+	</flow>
+</mule>

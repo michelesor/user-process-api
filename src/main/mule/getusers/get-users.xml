@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-users-implementation-flow" doc:id="31fe3fa2-1ceb-4987-8ea9-1a5ba1dbc77b" >
+		<logger level="INFO" doc:name="Logger start" doc:id="1d66b851-d7c0-4717-80a8-4a637162315b" message='#[output application/java&#10;---&#10;"start getuser flow  " ++  "correlationId: " ++ correlationId]' />
+		<http:request method="GET" doc:name="Request  GET /users" doc:id="46e30b57-fa2c-41b3-a77c-44e8252194ee" config-ref="Database_System_HTTP_Request_configuration" path="${database-sys.path}" responseTimeout="999999">
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "123abc",
+	"client_id" : "123abc"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"nome" : attributes.queryParams.nome,
+	"cognome" : attributes.queryParams.cognome
+}]]]></http:query-params>
+			</http:request>
+		<file:write doc:name="Write to ELAB" doc:id="4a3f16e0-9d9a-4d58-bc22-4cfcbcc6930e" path="#[p('get-users.elab') ++ &quot;get_user_&quot; ++ now() as String { format : &quot;yyyyMMddHHmmss&quot; } ++ &quot;.csv&quot;]">
+				<file:content><![CDATA[#[%dw 2.0
+output application/csv separator=";" , header=true
+---
+payload map (row) -> {
+    id: row.id,
+    nome: row.nome,
+    cognome: row.cognome,
+    citta: row.citta,
+    eta: row.eta as Number,
+    email: row.email
+}]]]></file:content>
+			</file:write>
+		<ee:transform doc:name="response" doc:id="93b02627-c56d-4509-81ce-6a9a69b35f67">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	fileName: p('get-users.elab') ++ "get_user_" ++ now() as String { format : "yyyyMMddHHmmss" } ++ ".csv",
+	message: "file with all user created"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		<logger level="INFO" doc:name="Logger END" doc:id="f31c46e0-6d44-4191-a54c-93ce5616aed5" message='#[output application/java&#10;---&#10;"End get user  , file name: " ++ payload.fileName  ++ "correlaionId: " ++ correlationId]' />
+	</flow>
+</mule>
