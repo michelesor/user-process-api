@@ -10,22 +10,25 @@
 	<munit:config name="user-batch-test-suite.xml" />
 	<munit:test name="user-batch-test-suite-create-users-implementation-flowTest" doc:id="93e5c06b-efbb-4272-b1e9-1e87723b7a5c" description="Test">
 		<munit:behavior>
-			<munit-tools:mock-when doc:name="Mock transformation csv to json" doc:id="f86ba118-1c74-469e-9a91-f41851ba81d9" processor="ee:transform">
+			<munit-tools:mock-when doc:name="Mock when" doc:id="69f4d607-6eed-410f-bb9a-8a5a51e75c7b" processor="file:listener">
 				<munit-tools:with-attributes >
-					<munit-tools:with-attribute whereValue="transform csv in json" attributeName="doc:name" />
-					<munit-tools:with-attribute whereValue="53881ccc-087f-42c0-8367-efe3437e2164" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="On New or Updated File" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="90fd2a98-0cad-4cea-91af-17a8831944dc" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="C:/mich/create-csv" attributeName="directory" />
+					<munit-tools:with-attribute whereValue='application/csv; separator=";"; header=true' attributeName="outputMimeType" />
 				</munit-tools:with-attributes>
 				<munit-tools:then-return >
-					<munit-tools:payload value='#[[&#10;  {&#10;    "id": "1",&#10;    "nome": "Michele",&#10;    "cognome": "Sorbo",&#10;    "citta": "Caserta",&#10;    "eta": 26,&#10;    "email": "michelesorbo0@gmail.com"&#10;  }&#10;]]' />
+					<munit-tools:payload value='#[%dw 2.0&#10;output application/csv separator = ";" , header = true&#10;---&#10;[&#10;    {&#10;        id: "1",&#10;        nome: "Michele",&#10;        cognome: "Sorbo",&#10;        eta: 26,&#10;        citta: "Caserta",&#10;        email: "michelesorbo0@gmail.com"&#10;    }&#10;]]' />
 				</munit-tools:then-return>
+				<munit-tools:then-call flow="create-users-implementation-flow" />
 			</munit-tools:mock-when>
 			<munit-tools:mock-when doc:name="Mock HTTP Request" doc:id="6fefcdde-525f-4068-821a-3eb82181fed5" processor="http:request">
-				<munit-tools:with-attributes>
+				<munit-tools:with-attributes >
 					<munit-tools:with-attribute whereValue="POST" attributeName="method" />
 					<munit-tools:with-attribute whereValue="Request POST /users" attributeName="doc:name" />
 					<munit-tools:with-attribute whereValue="3c2cd0f1-4fe1-4f23-afe0-23ed3c7c3ebd" attributeName="doc:id" />
 					<munit-tools:with-attribute whereValue="Database_System_HTTP_Request_configuration" attributeName="config-ref" />
-					<munit-tools:with-attribute whereValue="${database-sys.path}" attributeName="path" />
+					<munit-tools:with-attribute whereValue="/users" attributeName="path" />
 				</munit-tools:with-attributes>
 				<munit-tools:then-return >
 					<munit-tools:payload value='#[[&#10;  {&#10;    "id": "123456789"&#10;  }&#10;]]' mediaType="application/json" />
@@ -35,20 +38,17 @@
 				<munit-tools:with-attributes >
 					<munit-tools:with-attribute whereValue="Move to ELAB" attributeName="doc:name" />
 					<munit-tools:with-attribute whereValue="1c2a4e39-eef6-451a-a265-a540b0ca8fbe" attributeName="doc:id" />
-					<munit-tools:with-attribute whereValue="#[vars.sourcePath]" attributeName="sourcePath" />
-					<munit-tools:with-attribute whereValue="#[p('create-users.elab')]" attributeName="targetPath" />
+					<munit-tools:with-attribute whereValue="C:/Users/msorb/CSV-TEST/create_users/" attributeName="sourcePath" />
 				</munit-tools:with-attributes>
 				<munit-tools:then-return >
-					<munit-tools:attributes value="#[p('create-users.elab')]" />
-					<munit-tools:variables >
-						<munit-tools:variable key="sourcePath" value='"C:/users/michele/csv"' />
-					</munit-tools:variables>
+					<munit-tools:payload value='#[output application/json&#10;---&#10;"OK"]' />
 				</munit-tools:then-return>
 			</munit-tools:mock-when>
 		</munit:behavior>
 		<munit:execution >
-			<munit:set-event doc:name="Set Event" doc:id="aca5757d-9a5f-4c65-ba78-f495c3e7626b">
-				<munit:payload value='#[%dw 2.0&#10;output text/plain&#10;---&#10;"id,nome,cognome,eta,citta ,email&#10;1;Michele;Sorbo;Caserta;26;michelesorbo0@gmail.com"]' />
+			<munit:set-event doc:name="Set Event" doc:id="55d1d986-f0b1-4c7f-ba67-50459158f795" >
+				<munit:payload value='#[%dw 2.0&#10;output application/csv separator = ";" , header = true&#10;---&#10;[&#10;    {&#10;        id: "1",&#10;        nome: "Michele",&#10;        cognome: "Sorbo",&#10;		citta: "Caserta",&#10;        eta: 26,&#10;        email: "michelesorbo0@gmail.com"&#10;    }&#10;]]' />
+				<munit:attributes value='#[output application/json&#10;---&#10;{&#10;	"fileName" : "create-users.csv",&#10;	"path" : "C:/Users/msorb/CSV-TEST/create_users/"&#10;}]' />
 			</munit:set-event>
 			<flow-ref doc:name="create-users-implementation-flow" doc:id="9c1e3589-22b8-456c-8319-ee3dd09b05a5" name="create-users-implementation-flow"/>
 		</munit:execution>
